@@ -23,7 +23,9 @@ func RequireAuth(c *gin.Context) {
 	tokenStr, err := c.Cookie("Auth")
 
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"valid": false})
+		c.Abort()
+		return
 	}
 
 	token, _ := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
@@ -37,14 +39,18 @@ func RequireAuth(c *gin.Context) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		//check for expire date
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"valid": false})
+			c.Abort()
+			return
 		}
 
 		//find user
 		var user models.User
 		config.DB.First(&user, claims["sub"])
 		if user.ID == 0 {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"valid": false})
+			c.Abort()
+			return
 		}
 
 		//attach to request
@@ -54,7 +60,9 @@ func RequireAuth(c *gin.Context) {
 		c.Next()
 
 	} else {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"valid": false})
+		c.Abort()
+		return
 	}
 
 }

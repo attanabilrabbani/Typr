@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Typr</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <div>
+            <img src="/assets/web/typrLogo.png" class="logo" id="logo" alt="Company Logo" width="100" height="100">
+        </div>
+        <ul>
+            <li>
+                <input type="text" class="searchbox" placeholder="Search">
+            </li>
+            <li>
+                <div id="loginbutton">
+                    <a href="http://localhost:5000/login">Login</a>
+                </div>
+            </li>
+            <li>
+                <div id="signupbutton">
+                    <a href="http://localhost:5000/signup">Signup</a>
+                </div>
+            </li>
+            <li>
+                <div id="user-profile" class="profile-container">
+                    <img src="" id="profimg" alt="" class="profile-pic">
+                </div>
+            </li>
+            <div id="signout">
+                <li>
+                    <button type="button" id="signoutbtn" data-bs-toggle="modal" data-bs-target="#signout-modal" class="btn btn-outline-light">Signout</button>
+                </li>
+            </div>
+        </ul>
+    </nav>
+    <br>
+    <!-- Add posts icon -->
+    <div id="add-posts" class="addposts"> 
+    </div>
+    <!-- Container for posts -->
+    <div id="posts" class="maindiv custom-scroll">
+    </div>
+    <!-- Add posts modal -->
+    <div class="modal fade" id="addpost-modal" tabindex="0" aria-labelledby="label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg popup">
+            <div class="modal-content" id="content">
+            </div>
+        </div>
+    </div>
+    <!-- signout confirmation modal -->
+    <div class="modal fade" id="signout-modal" tabindex="0" aria-labelledby="label"
+    aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered popup">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title fs-5" id="label">Typr - Confirm</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>Sign Out?</h4>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmbtn" type="button" class="btn btn-success">Signout</button>
+                    <button data-bs-dismiss="modal" type="button" class="btn btn-danger">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Login to like/comment modal -->
+    <div class="modal fade" id="logintocontinue-modal" tabindex="0" aria-labelledby="label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered popup">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title fs-5" id="label">Typr - Message</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>Please Login to Like or Comment.</h4>
+                </div>
+                <div class="moda-footer">
+                    <button id="loginredirectbtn" type="button" class="btn btn-success">Login</button>
+                    <button data-bs-dismiss="modal" type="button" class="btn btn-danger">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/index.js"></script>
+</body>
+</html>

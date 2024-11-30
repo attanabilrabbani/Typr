@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/attanabilrabbani/go-typr/config"
 	"github.com/attanabilrabbani/go-typr/models"
@@ -11,7 +14,9 @@ import (
 func CreatePost(c *gin.Context) {
 	var postBody models.Posts
 
-	err := c.Bind(&postBody)
+	err := c.ShouldBind(&postBody)
+
+	fmt.Println(postBody.Content)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -48,13 +53,39 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
+	image, err := c.FormFile("image")
+	imageName := strings.ReplaceAll(image.Filename, " ", "_")
+	if err == nil {
+		imageFolder := fmt.Sprintf("./assets/posts/%d", postBody.ID)
+		err := os.MkdirAll(imageFolder, os.ModePerm)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create folder for post"})
+			return
+		}
+
+		imgPath := fmt.Sprintf("%s/%s", imageFolder, imageName)
+		err = c.SaveUploadedFile(image, imgPath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to upload image"})
+			return
+		}
+
+		postBody.Image = imageName
+		config.DB.Save(&postBody)
+	}
+
 	c.JSON(http.StatusOK, postBody)
 
 }
 
 func GetPosts(c *gin.Context) {
 	var posts []models.Posts
-	err := config.DB.Preload("Children.Children").Preload("User").Preload("Likes").Where("parent_id IS NULL").Find(&posts).Error
+	err := config.DB.Preload("Children.Children").
+		Preload("User").
+		Preload("Likes").
+		Where("parent_id IS NULL").
+		Order("created_at DESC").
+		Find(&posts).Error
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -87,6 +118,15 @@ func DeletePosts(c *gin.Context) {
 	var posts models.Posts
 	postId := c.Param("id")
 
+	folderPath := fmt.Sprintf("./assets/posts/%s", postId)
+
+	_, err := os.Stat(folderPath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			_ = os.RemoveAll(folderPath)
+		}
+	}
+
 	_, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -95,7 +135,7 @@ func DeletePosts(c *gin.Context) {
 		return
 	}
 
-	err := config.DB.Where("ID=?", postId).Delete(&posts).Error
+	err = config.DB.Where("ID=?", postId).Delete(&posts).Error
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

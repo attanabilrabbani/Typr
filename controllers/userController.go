@@ -17,6 +17,7 @@ import (
 func UserSignup(c *gin.Context) {
 	var signupbody struct {
 		Username string
+		Name     string
 		Email    string
 		Password string
 		Role     string
@@ -62,6 +63,7 @@ func UserSignup(c *gin.Context) {
 
 	user := models.User{
 		Username: signupbody.Username,
+		Name:     signupbody.Name,
 		Email:    signupbody.Email,
 		Password: string(hash),
 		Role:     signupbody.Role,
@@ -145,7 +147,8 @@ func UserSignout(c *gin.Context) {
 func UserValidate(c *gin.Context) {
 	user, _ := c.Get("user")
 	c.JSON(http.StatusOK, gin.H{
-		"message": user,
+		"valid": true,
+		"data":  user,
 	})
 }
 

@@ -6,7 +6,7 @@ import (
 
 type Posts struct {
 	gorm.Model
-	Content  string `gorm:"not null"`
+	Content  string `gorm:"not null" form:"content"`
 	Image    string
 	ParentID *uint `json:"parent_id"`
 	UserID   uint  `gorm:"not null"`
