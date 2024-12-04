@@ -40,6 +40,17 @@ function unlikeToggle(postId){
         }
     });
 }
+
+function countComments(children){
+    var totalComment = 0;
+    children.forEach(child => {
+        totalComment++;
+        if (child.Children.length > 0 && Array.isArray(child.Children) && child.Children != null){
+            totalComment += countComments(child.Children);
+    }
+});
+    return totalComment;
+}
 $(document).ready(function(){
     document.getElementById("logo").addEventListener("click", function(){
         window.location.href="http://localhost:5000/";
@@ -125,7 +136,7 @@ $(document).ready(function(){
                                             window.location.href="http://localhost:5000/";
                                             console.log("Post added succesfully");
                                         },
-                                        error: function(xhr, status, error){
+                                        error: function(xhr){
                                             $("#warning").append(xhr.responseJSON.error);
                                         }
                                     });
@@ -155,12 +166,12 @@ $(document).ready(function(){
                                 $("#posts").empty();
                                 postsdata.forEach(post => {
                                     const likeTotal = post.Likes.length;
-                                    const commentTotal = post.Children.length;
+                                    const commentTotal = countComments(post.Children);
                                     const likeCheck = post.Likes.some(like => like.UserID === userId)
                                     const timeStamp = post.CreatedAt;
                                     const date = new Date(timeStamp).toISOString().split("T")[0];
-                                    const posts = `<div class="mainbox">
-                                                    <div style="display: flex; align-items: center;">
+                                    const posts = `<div class="mainbox" style="cursor: pointer;" data-id="${post.ID}">
+                                                    <div class="profdiv" data-id="${post.User.ID}" style="display: flex; align-items: center;cursor: pointer;" >
                                                         <div id="profile-pict" class="profile-container">
                                                             <img src="/assets/pfp/${post.User.ProfilePic}" id="profimg" alt="" class="profile-pic">
                                                         </div>
@@ -172,7 +183,7 @@ $(document).ready(function(){
                                                         <h6 style="margin-right: 10em;">&nbsp;${date}</h6>
                                                     </div>
                                                     <br>
-                                                    <div class="card-body">
+                                                    <div class="card-body" style="cursor: pointer;" data-id="${post.ID}">
                                                         <p class="card-text">${post.Content}</p>
                                                         ${post.Image ? `<img src="./assets/posts/${post.ID}/${post.Image}" style="max-width: 900px; max-height: 600px;" alt="">`: ""}
                                                     </div>
@@ -188,6 +199,14 @@ $(document).ready(function(){
                                                     </div>
                                                 </div>`;
                                     $("#posts").append(posts);             
+                                });
+                                $(".card-body").on("click", function(){
+                                    const divId = $(this).data("id");
+                                    window.location.href = `http://localhost:5000/posts/view/${divId}`;
+                                })
+                                $(".profdiv").on("click", function(){
+                                    const profId = $(this).data("id");
+                                    window.location.href = `http://localhost:5000/profile/${profId}`;
                                 });
                             }
                         });
@@ -255,4 +274,9 @@ $(document).ready(function(){
         
     };
     checkLoginStatus();
+    window.addEventListener("pageshow", function(event) {
+        if (event.persisted) {
+            $("#likescontainer").load("#likescontainer");
+        }
+    });
 });

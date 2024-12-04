@@ -12,4 +12,5 @@ func UserRoutes(r *gin.Engine) {
 	r.GET("/validate", middleware.RequireAuth, controllers.UserValidate)
 	r.POST("/logout", controllers.UserSignout)
 	r.GET("/users/:id", controllers.GetUserById)
+	r.PUT("/users/edit/:id", middleware.RequireAuth, controllers.UpdateUser)
 }

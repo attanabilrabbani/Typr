@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/attanabilrabbani/go-typr/config"
 	"github.com/attanabilrabbani/go-typr/models"
@@ -13,7 +16,7 @@ func AddReply(c *gin.Context) {
 	postId, _ := strconv.Atoi(c.Param("postid"))
 	var replyBody, parentPost models.Posts
 
-	err := c.Bind(&replyBody)
+	err := c.ShouldBind(&replyBody)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -60,6 +63,27 @@ func AddReply(c *gin.Context) {
 			"message": "Failed to post reply",
 		})
 		return
+	}
+
+	image, err := c.FormFile("image")
+	if err == nil {
+		imageName := strings.ReplaceAll(image.Filename, " ", "_")
+		imageFolder := fmt.Sprintf("./assets/posts/%d", replyBody.ID)
+		err := os.MkdirAll(imageFolder, os.ModePerm)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create folder for post"})
+			return
+		}
+
+		imgPath := fmt.Sprintf("%s/%s", imageFolder, imageName)
+		err = c.SaveUploadedFile(image, imgPath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to upload image"})
+			return
+		}
+
+		replyBody.Image = imageName
+		config.DB.Save(&replyBody)
 	}
 
 	c.JSON(http.StatusOK, replyBody)

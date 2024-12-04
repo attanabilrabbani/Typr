@@ -54,8 +54,8 @@ func CreatePost(c *gin.Context) {
 	}
 
 	image, err := c.FormFile("image")
-	imageName := strings.ReplaceAll(image.Filename, " ", "_")
 	if err == nil {
+		imageName := strings.ReplaceAll(image.Filename, " ", "_")
 		imageFolder := fmt.Sprintf("./assets/posts/%d", postBody.ID)
 		err := os.MkdirAll(imageFolder, os.ModePerm)
 		if err != nil {
@@ -78,12 +78,34 @@ func CreatePost(c *gin.Context) {
 
 }
 
+func preloadChildren(depth int) string {
+	if depth == 0 {
+		return "Children"
+	}
+
+	return fmt.Sprintf("Children.%s", preloadChildren(depth-1))
+}
+
 func GetPosts(c *gin.Context) {
 	var posts []models.Posts
-	err := config.DB.Preload("Children.Children").
+
+	postQuery := config.DB
+
+	depth := 1
+
+	for depth < 15 {
+		preloadStr := preloadChildren(depth)
+		postQuery = postQuery.Preload(preloadStr)
+		postQuery = postQuery.Preload(fmt.Sprintf("%s.User", preloadStr))
+		postQuery = postQuery.Preload(fmt.Sprintf("%s.Likes", preloadStr))
+		depth++
+
+	}
+	err := postQuery.Preload("Children.Children").
+		Preload("Children.User").
+		Preload("Children.Likes").
 		Preload("User").
-		Preload("Likes").
-		Where("parent_id IS NULL").
+		Preload("Likes").Where("parent_id IS NULL").
 		Order("created_at DESC").
 		Find(&posts).Error
 
@@ -93,21 +115,72 @@ func GetPosts(c *gin.Context) {
 		})
 		return
 	}
-
 	c.JSON(http.StatusOK, posts)
+}
+
+func EditPosts(c *gin.Context) {
+	postId := c.Param("id")
+
+	var postData models.Posts
+	var editBody struct {
+		Content string `gorm:"not null" form:"content"`
+	}
+
+	c.ShouldBind(&editBody)
+
+	config.DB.First(&postData, postId)
+
+	editData := make(map[string]interface{})
+
+	if editBody.Content != "" {
+		editData["Content"] = editBody.Content
+	}
+
+	err := config.DB.Model(&postData).Updates(editData).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Update Failed.",
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Update Succesful.",
+	})
+
 }
 
 func GetPostsById(c *gin.Context) {
 	postId := c.Param("id")
-
 	var postBody models.Posts
-	err := config.DB.Preload("Children").Preload("User").Preload("Likes").First(&postBody, postId).Error
+
+	postQuery := config.DB
+
+	postQuery = postQuery.Preload("User").Preload("Likes").Preload("Children.Children").Preload("Children.User").Preload("Children.Likes")
+
+	err := postQuery.First(&postBody, postId).Error
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Post Unavailable",
 		})
 		return
+	}
+
+	depth := 1
+
+	for depth < 15 {
+		preloadStr := preloadChildren(depth)
+		postQuery = postQuery.Preload(preloadStr)
+		postQuery = postQuery.Preload(fmt.Sprintf("%s.User", preloadStr))
+		postQuery = postQuery.Preload(fmt.Sprintf("%s.Likes", preloadStr))
+
+		err := postQuery.Find(&postBody).Error
+		if err != nil {
+			break
+		}
+		depth++
+
 	}
 
 	c.JSON(http.StatusOK, postBody)
@@ -121,10 +194,8 @@ func DeletePosts(c *gin.Context) {
 	folderPath := fmt.Sprintf("./assets/posts/%s", postId)
 
 	_, err := os.Stat(folderPath)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			_ = os.RemoveAll(folderPath)
-		}
+	if err == nil {
+		_ = os.RemoveAll(folderPath)
 	}
 
 	_, exists := c.Get("user")

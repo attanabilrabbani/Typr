@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -156,7 +157,10 @@ func GetUserById(c *gin.Context) {
 	userId := c.Param("id")
 
 	var userData models.User
-	config.DB.Preload("Posts").Preload("Likes").Preload("Followers").Preload("Following").First(&userData, userId)
+	config.DB.Preload("Posts").Order("created_at DESC")
+
+	config.DB.Preload("Likes").Preload("Posts.Likes").
+		Preload("Followers").Preload("Following").First(&userData, userId)
 
 	if userData.ID == 0 || userData.Role == "admin" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -165,6 +169,70 @@ func GetUserById(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, userData)
+}
+
+func UpdateUser(c *gin.Context) {
+	var userData models.User
+	var userBody struct { // Struct for binding only updatable fields
+		Name       string `form:"name"`
+		Bio        string `form:"bio"`
+		Email      string `form:"email"`
+		Password   string `form:"password"`
+		ProfilePic string `form:"profilepic"` // File upload will handle this
+	}
+
+	userId := c.Param("id")
+	// userId, _ := strconv.Atoi(userIdStr)
+
+	fmt.Println(userId)
+
+	c.ShouldBind(&userBody)
+
+	config.DB.First(&userData, userId)
+
+	userUpdateData := make(map[string]interface{})
+
+	if userBody.Name != "" {
+		userUpdateData["Name"] = userBody.Name
+	}
+	userUpdateData["Bio"] = userBody.Bio
+	if userBody.Email != "" {
+		userUpdateData["Email"] = userBody.Email
+	}
+	if userBody.Password != "" {
+		hash, _ := bcrypt.GenerateFromPassword([]byte(userBody.Password), 10)
+		userUpdateData["Password"] = string(hash)
+	}
+
+	image, err := c.FormFile("profilepic")
+	if err == nil {
+		imageName := strings.ReplaceAll(image.Filename, " ", "_")
+		imageFolder := fmt.Sprintf("./assets/pfp/%d", userData.ID)
+		if _, err := os.Stat(imageFolder); os.IsNotExist(err) {
+			err2 := os.MkdirAll(imageFolder, os.ModePerm)
+			if err2 != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create folder for post"})
+				return
+			}
+		}
+
+		imgPath := fmt.Sprintf("%s/%s", imageFolder, imageName)
+		err = c.SaveUploadedFile(image, imgPath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to upload image"})
+			return
+		}
+
+		userUpdateData["ProfilePic"] = fmt.Sprintf("%d/%s", userData.ID, imageName)
+		config.DB.Save(&userUpdateData)
+	}
+
+	if err := config.DB.Model(&userData).Updates(userUpdateData).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, userUpdateData)
 }
 
 func CheckUsernameAvailability(username string) bool {

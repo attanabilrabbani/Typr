@@ -11,4 +11,5 @@ func PostsRoutes(r *gin.Engine) {
 	r.GET("/posts/", controllers.GetPosts)
 	r.GET("/posts/:id", controllers.GetPostsById)
 	r.DELETE("/posts/:id", middleware.RequireAuth, controllers.DeletePosts)
+	r.PUT("/posts/edit/:id", middleware.RequireAuth, controllers.EditPosts)
 }

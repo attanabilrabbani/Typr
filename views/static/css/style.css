@@ -88,6 +88,18 @@ nav ul li a:hover{
     transition: border-color 0.3s;
 }
 
+.profile-pic-view {
+    width: 250px; /* Set the size of the image */
+    height: 250px; /* Ensure it’s a square */
+    left: 50%;
+    right: 50%;
+    border-radius: 50%; /* Make it a circle */
+    border: 4px solid #fff; /* Optional: Add a white border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Add a shadow */
+    object-fit: cover; /* Ensure the image scales properly */
+    margin-bottom: 15px; /* Add spacing below the image */
+}
+
 .profile-pic:hover {
     border-color: white; /* Change border color on hover */
 }
@@ -114,6 +126,40 @@ nav ul li a:hover{
     margin: 20px auto;   
     align-items: center;    
 }
+.posts-box{
+    margin-top: 2em;
+    overflow: auto;
+    height: 2000px;
+}
+.profile-container-box{
+    display: flex;
+    justify-content: center;
+    margin-top: 0.5em; /* Centers horizontally */ /* Centers vertically */
+    height: 100%;
+}
+.profile-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 450px;
+    height: 1000px; /* Adjust as needed */
+    background-color: #31363F;
+    border: 2px solid #333;
+    margin-left: 16em;
+    margin-top: -58em;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 5px;
+}
+
+.profile-info{
+    margin-top: -44.5em;
+}
+
+.profile-parent-box{
+    display: flex; width: 2000px; justify-content: center; align-items: center; gap: 20px;
+}
+
 
 .postbtn{
     background-color: transparent;
